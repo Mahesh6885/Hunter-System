@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Hunter System — UI Reference Prototype</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== DESIGN TOKENS (map 1:1 to src/theme/ in React Native) ===== */
+:root{--bg:#05080D;--bg2:#080F19;--panel:#0A1420;--c1:#39BFFF;--c2:#7DE8FF;--tx:#F2F7FF;--tx2:#8CA5BC;--tx3:#526A81;--ok:#54E6A1;--warn:#FFC66D;--err:#FF647C;--rare:#B8A1FF;
+--line:rgba(57,191,255,.32);--glow:0 0 14px rgba(57,191,255,.25);--s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;
+--fd:'Orbitron','Segoe UI',sans-serif;--fb:'Rajdhani','Segoe UI',system-ui,sans-serif;--dur:.5s;
+box-sizing:border-box;color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--bg)}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:radial-gradient(120% 60% at 50% -10%,#0B1B2E 0%,var(--bg) 60%);color:var(--tx);font:600 16px/1.3 var(--fb)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+body.rm *,body.rm *::before{transition:none!important;animation:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+#app{max-width:430px;margin:0 auto;height:100%;display:flex;flex-direction:column;border-left:1px solid #0d1a29;border-right:1px solid #0d1a29}
+.demo{font-size:11px;letter-spacing:.12em;color:var(--warn);text-align:center;padding:4px;background:#14100a;border-bottom:1px solid #3a2e12}
+#top{display:flex;align-items:center;justify-content:space-between;padding:var(--s3) var(--s4)}
+.brand{font:700 13px var(--fd);letter-spacing:.18em;color:var(--c2)}
+.ic{width:44px;height:44px;display:grid;place-items:center;position:relative}
+.dot{position:absolute;top:9px;right:9px;width:8px;height:8px;background:var(--err);border-radius:50%}
+#main{flex:1;overflow-y:auto;padding:0 var(--s4) var(--s4);display:flex;flex-direction:column;gap:var(--s3)}
+/* panel */
+.p{position:relative;background:linear-gradient(180deg,rgba(57,191,255,.07),rgba(10,20,32,.9));border:1px solid var(--line);padding:var(--s3)}
+.p::before,.p::after{content:"";position:absolute;width:10px;height:10px;border:2px solid var(--c2)}
+.p::before{top:-1px;left:-1px;border-right:0;border-bottom:0}.p::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+.p.hot{box-shadow:var(--glow);border-color:var(--c1)}
+.ph{display:flex;justify-content:space-between;align-items:center;font-size:12px;letter-spacing:.16em;color:var(--c1);text-transform:uppercase;border-bottom:1px solid var(--line);padding-bottom:var(--s2);margin-bottom:var(--s3)}
+.ph b{color:var(--tx2);font-weight:600;letter-spacing:.06em}
+.h1{font:700 18px var(--fd);letter-spacing:.06em}
+.sub{color:var(--tx2);font-size:14px}.mut{color:var(--tx3);font-size:12px}
+.num{font:700 22px var(--fd);color:var(--tx)}
+.row{display:flex;align-items:center;gap:var(--s3)}.sp{justify-content:space-between}.grow{flex:1}
+.sep{height:1px;background:var(--line);margin:var(--s2) 0}
+.bar{height:6px;background:#0d1d2e;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--c1),var(--c2));transition:width var(--dur) ease}
+.bar.g i{background:var(--ok)}.bar.w i{background:var(--warn)}.bar.r i{background:var(--rare)}
+.btn{min-height:52px;width:100%;border:1px solid var(--c1);background:rgba(57,191,255,.16);color:var(--c2);font:700 14px var(--fd);letter-spacing:.14em;text-transform:uppercase;box-shadow:var(--glow);position:relative}
+.btn:active{background:rgba(57,191,255,.32)}
+.btn2{min-height:48px;padding:0 var(--s4);border:1px solid var(--line);color:var(--tx2);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:13px}
+.btn2.on,.chip.on{border-color:var(--c1);color:var(--c2);background:rgba(57,191,255,.12)}
+.chips{display:flex;gap:var(--s2);overflow-x:auto;padding-bottom:2px}
+.chip{min-height:40px;padding:0 var(--s3);border:1px solid var(--line);color:var(--tx2);font-size:13px;letter-spacing:.08em;white-space:nowrap}
+.badge{display:inline-block;padding:2px 8px;border:1px solid currentColor;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.rank{width:44px;height:44px;display:grid;place-items:center;border:2px solid var(--c1);font:700 20px var(--fd);color:var(--c2);transform:rotate(45deg);box-shadow:var(--glow)}
+.rank span{transform:rotate(-45deg)}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.err{color:var(--err)}.rare{color:var(--rare)}.cy{color:var(--c2)}
+.item{display:flex;align-items:center;gap:var(--s3);min-height:48px;width:100%;text-align:left;border-bottom:1px solid rgba(57,191,255,.12)}
+.item:last-child{border:0}
+.chk{width:22px;height:22px;border:1px solid var(--c1);display:grid;place-items:center;flex:none;color:var(--bg);font-weight:700}
+.chk.on{background:var(--c1)}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s2)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2)}
+.cell{border:1px solid var(--line);padding:var(--s2);text-align:center}
+.cell .num{font-size:17px}
+.days{display:flex;gap:6px}.days i{flex:1;height:8px;border:1px solid var(--line)}.days i.on{background:var(--c1)}
+.bars{display:flex;align-items:flex-end;gap:5px;height:90px}.bars i{flex:1;background:linear-gradient(0deg,rgba(57,191,255,.25),var(--c1));min-height:3px}
+.sw{width:52px;height:30px;border:1px solid var(--c1);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;background:var(--tx3);transition:all .2s}
+.sw.on{background:rgba(57,191,255,.2)}.sw.on::after{left:25px;background:var(--c2)}
+#nav{display:flex;border-top:1px solid var(--line);background:rgba(5,8,13,.96)}
+#nav button{flex:1;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;letter-spacing:.12em;color:var(--tx3);text-transform:uppercase;position:relative}
+#nav button.on{color:var(--c2)}#nav button.on::before{content:"";position:absolute;top:-1px;left:25%;right:25%;height:2px;background:var(--c1);box-shadow:var(--glow)}
+.ov{position:absolute;inset:0;background:rgba(2,5,9,.86);display:grid;place-items:center;padding:var(--s4);z-index:9}
+.ov .p{width:100%;text-align:center;animation:pop .35s ease}
+.ov .big{font:700 34px var(--fd);color:var(--c2);text-shadow:0 0 18px rgba(57,191,255,.6)}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.scan{position:absolute;left:0;right:0;height:2px;background:var(--c2);opacity:.5;animation:sc 2.4s linear infinite;top:0}
+@keyframes sc{to{top:100%}}
+:focus-visible{outline:2px solid var(--c2);outline-offset:2px}
+</style></head>
+<body><div id="app">
+<div class="demo">UI REFERENCE · SIMULATED DATA · NOT THE NATIVE APP</div>
+<div id="top"></div><div id="main"></div><nav id="nav"></nav><div id="ovl"></div>
+</div>
+<script>
+/* ===== MOCK DATA (lives in src/data/ in the RN app) ===== */
+const S={scr:'dash',cat:'Daily',filt:'All',range:'7D',q:[false,false,false],xp:2780,lvl:14,ei:0,set:1,load:40,run:false,t:0,rest:0,paid:false,ov:null,rm:false,sound:true,unit:'kg',pts:3,water:5,attr:[42,35,28,39,51]};
+const W=[["Goblet Squat",40],["Push-Up",0],["Dumbbell Row",24]];
+const EX=[["Goblet Squat","Legs","Dumbbell","Beginner"],["Push-Up","Chest","Bodyweight","Beginner"],["Dumbbell Row","Back","Dumbbell","Intermediate"],["Band Pull-Apart","Shoulders","Band","Beginner"],["Plank","Core","Bodyweight","Beginner"],["Lat Pulldown","Back","Gym","Intermediate"]];
+const AN=["Strength","Endurance","Agility","Vitality","Discipline"];
+const QL=["Complete today’s workout","Reach 120 g protein","Drink 2 L of water"];
+const QB={Daily:[["Morning Mobility","10 min stretch routine","+40 XP","avail"],["Protein Target","Log 120 g protein","+60 XP","prog"],["Hydration","Drink 8 glasses","+30 XP","done"]],Weekly:[["Iron Week","Complete 4 workouts (2/4)","+300 XP","prog"],["Early Riser","3 workouts before 8 AM","+150 XP","avail"],["Dungeon Gate","Reach Rank C","+500 XP","lock"]],Recovery:[["Rest Day Walk","20 min easy walk","+30 XP","avail"],["Sleep Window","7+ hours, 3 nights","+80 XP","lock"]]};
+const BADGES=[["First Gate","Common",1],["7-Day Streak","Rare",1],["Iron Will","Epic",1],["Shadow Sprint","Rare",0],["Rank C","Epic",0],["Monarch","Legend",0]];
+const RC={Common:"var(--tx2)",Rare:"var(--c1)",Epic:"var(--rare)",Legend:"var(--warn)"};
+const R={ "7D":{w:[72.4,72.2,72.3,72.0,71.9,71.8,71.6],v:[3,0,4,2,0,5,3]},"30D":{w:[74,73.4,73,72.6,72.3,72,71.8,71.6],v:[10,14,12,16,13,18,15,17]},"90D":{w:[76,75.2,74.6,74,73.1,72.5,72,71.6],v:[30,36,34,41,44,40,48,52]}};
+const IC={dash:'<path d="M3 3h8v8H3zM13 3h8v5h-8zM13 11h8v10h-8zM3 14h8v7H3z"/>',quests:'<path d="M6 3h12v18l-6-3-6 3z"/><path d="M9 8h6M9 12h6"/>',lib:'<path d="M2 9v6M5 6v12M19 6v12M22 9v6M5 12h14"/>',status:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/>',more:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',bell:'<path d="M6 16V11a6 6 0 0112 0v5l2 2H4zM10 21h4"/>'};
+const svg=(k,s=22)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square">${IC[k]}</svg>`;
+/* ===== COMPONENTS ===== */
+const P=(t,b,x='',c='')=>`<section class="p ${c}"><div class="ph"><span>${t}</span>${x}</div>${b}</section>`;
+const bar=(v,c='')=>`<div class="bar ${c}" role="progressbar" aria-valuenow="${Math.round(v)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${Math.min(v,100)}%"></i></div>`;
+const rank=(r)=>`<div class="rank"><span>${r}</span></div>`;
+const badge=(t,c)=>`<span class="badge" style="color:${c}">${t}</span>`;
+const btn=(t,a,v='')=>`<button class="btn" data-a="${a}" data-v="${v}">${t}</button>`;
+const chips=(l,cur,a)=>`<div class="chips">${l.map(x=>`<button class="chip ${x==cur?'on':''}" data-a="${a}" data-v="${x}">${x}</button>`).join('')}</div>`;
+const sw=(k,on)=>`<button class="sw ${on?'on':''}" data-a="tog" data-v="${k}" role="switch" aria-checked="${on}" aria-label="${k}"></button>`;
+const attrRow=(n,v)=>`<div style="margin-bottom:10px"><div class="row sp"><span class="sub">${n}</span><span class="num" style="font-size:15px">${v}</span></div>${bar(v)}</div>`;
+const avatar=`<svg width="56" height="56" viewBox="0 0 56 56" style="border:1px solid var(--c1);background:#08121e;flex:none"><circle cx="28" cy="21" r="9" fill="#12304a"/><path d="M8 56c2-16 10-22 20-22s18 6 20 22z" fill="#12304a"/><path d="M0 0h56v56H0z" fill="none"/></svg>`;
+function line(d){const w=320,h=100,mn=Math.min(...d)-.4,mx=Math.max(...d)+.4;const p=d.map((v,i)=>[i*w/(d.length-1),h-(v-mn)/(mx-mn)*h+4]);return `<svg viewBox="0 0 ${w} ${h+8}" width="100%" role="img" aria-label="Weight trend"><polyline points="${p.map(x=>x.map(n=>n.toFixed(1)).join(',')).join(' ')}" fill="none" style="stroke:var(--c1);stroke-width:2"/>${p.map(x=>`<circle cx="${x[0]}" cy="${x[1]}" r="3" style="fill:var(--c2)"/>`).join('')}</svg>`}
+const bars=d=>{const m=Math.max(...d);return `<div class="bars">${d.map(v=>`<i style="height:${v/m*100}%"></i>`).join('')}</div>`};
+const xpMax=3000, kg=v=>S.unit=='kg'?v+' kg':Math.round(v*2.2046)+' lb';
+/* ===== SCREENS ===== */
+const done=()=>S.q.filter(Boolean).length;
+const SC={
+dash:()=>[
+P('System Status',`<div class="row">${avatar}<div class="grow"><div class="h1">ARJUN</div><div class="sub">Hunter · Level ${S.lvl}</div></div>${rank('D')}</div><div class="sep"></div><div class="row sp"><span class="mut">XP</span><span class="sub">${S.xp.toLocaleString()} / ${xpMax.toLocaleString()}</span></div>${bar(S.xp/xpMax*100)}<div class="row sp" style="margin-top:8px"><span class="mut">Streak</span><span class="cy">12 days</span></div><div class="days" style="margin-top:6px">${[1,1,1,1,1,1,0].map(x=>`<i class="${x?'on':''}"></i>`).join('')}</div>`),
+P('Daily Quest',`<div class="sub" style="margin-bottom:6px">Prove your discipline today.</div>${QL.map((l,i)=>`<button class="item" data-a="tq" data-v="${i}"><span class="chk ${S.q[i]?'on':''}">${S.q[i]?'✓':''}</span><span class="grow">${l}</span></button>`).join('')}<div class="row sp" style="margin:8px 0"><span class="mut">${done()}/3 complete</span>${badge('+150 XP','var(--warn)')}</div>${done()==3?`<div class="ok" style="text-align:center;margin-bottom:8px">QUEST COMPLETE</div>`:''}${btn('Start Quest','start')}`,badge(done()==3?'Complete':'Active',done()==3?'var(--ok)':'var(--c1)'),'hot'),
+P('Today’s Training',`<div class="row sp"><div><div class="h1" style="font-size:15px">Beginner Home A</div><div class="sub">35 min · 3 exercises</div></div><button class="btn2" data-a="go" data-v="lib">View</button></div>`),
+P('Attributes',AN.map((n,i)=>attrRow(n,S.attr[i])).join('')),
+P('Nutrition',`<div class="g2" style="margin-bottom:8px"><div class="cell"><div class="num">1,640</div><div class="mut">KCAL / 2,100</div></div><div class="cell"><div class="num">92 g</div><div class="mut">PROTEIN / 120</div></div></div>${bar(78)}<div class="row sp" style="margin-top:6px"><span class="mut">Carbs 180 g</span><span class="mut">Fat 48 g</span></div>`,'<button data-a="go" data-v="nutri" class="cy" style="font-size:12px;min-height:24px">OPEN</button>')],
+status:()=>[
+P('Hunter Status',`<div class="row">${avatar}<div class="grow"><div class="h1">ARJUN</div><div class="sub">Level ${S.lvl} · Rank D</div></div>${rank('D')}</div><div class="sep"></div>${bar(S.xp/xpMax*100)}<div class="mut" style="margin-top:4px">${S.xp.toLocaleString()} / 3,000 XP</div>`),
+P('Attributes',`<div class="row sp" style="margin-bottom:8px"><span class="sub">Available points</span><span class="num cy">${S.pts}</span></div>${AN.map((n,i)=>`<div class="row" style="margin-bottom:6px"><div class="grow">${attrRow(n,S.attr[i])}</div><button class="btn2" style="min-height:44px;padding:0 14px" data-a="pts" data-v="${i}" ${S.pts?'':'disabled style="opacity:.3;min-height:44px;padding:0 14px"'}>+</button></div>`).join('')}<div class="mut">Game stats are fictional and are not medical measurements.</div>`),
+P('Rank Path',`<div class="row sp">${['E','D','C','B','A','S'].map(r=>`<div style="text-align:center;opacity:${r<='D'?1:.35}"><div class="num ${r=='D'?'cy':''}" style="font-size:18px">${r}</div></div>`).join('')}</div>`),
+P('Titles',`<div class="row" style="gap:8px;flex-wrap:wrap">${badge('Early Riser','var(--c1)')}${badge('Iron Will','var(--rare)')}</div>`)],
+quests:()=>[
+`<div class="h1">QUEST BOARD</div>`,chips(['Daily','Weekly','Recovery'],S.cat,'cat'),
+...QB[S.cat].map(([n,d,r,s])=>{const m={avail:['Available','var(--c1)'],prog:['In progress','var(--warn)'],done:['Complete','var(--ok)'],lock:['Locked','var(--tx3)']}[s];return P(n,`<div class="sub">${d}</div><div class="row sp" style="margin-top:8px"><span class="warn">${r}</span><span class="mut">${s=='prog'?'50%':s=='done'?'100%':s=='lock'?'Requires rank':'0%'}</span></div>${bar(s=='prog'?50:s=='done'?100:0,s=='done'?'g':'')}`,badge(m[0],m[1]),s=='lock'?'':'')})],
+lib:()=>[
+`<div class="h1">WORKOUT LIBRARY</div>`,chips(['All','Legs','Chest','Back','Core'],S.filt,'filt'),
+P('Exercises',EX.filter(e=>S.filt=='All'||e[1]==S.filt).map(e=>`<button class="item" data-a="start" data-v="${e[0]}"><div class="grow"><div>${e[0]}</div><div class="mut">${e[1]} · ${e[2]} · 3×10</div></div>${badge(e[3],'var(--tx2)')}</button>`).join('')||'<div class="sub">No exercises match this filter.</div>'),
+btn('Start Beginner Home A','start')],
+active:()=>{const e=W[S.ei];return [
+P('Active Workout',`<div class="mut">Exercise ${S.ei+1} of 3 · Next: ${W[S.ei+1]?W[S.ei+1][0]:'Finish'}</div><div class="h1" style="margin:6px 0">${e[0]}</div><div class="row" style="gap:6px;margin:8px 0">${[1,2,3,4].map(i=>`<div class="grow bar ${i<S.set?'g':''}" style="height:8px">${i<S.set?'<i style="width:100%"></i>':''}</div>`).join('')}</div><div class="g3"><div class="cell"><div class="num">${S.set}/4</div><div class="mut">SET</div></div><div class="cell"><div class="num">10</div><div class="mut">REPS</div></div><div class="cell"><div class="num">${e[1]?kg(S.load):'BW'}</div><div class="mut">LOAD</div></div></div><div class="mut" style="margin-top:8px">Previous: 10 × ${e[1]?kg(e[1]-2):'BW'}</div>`,'','hot'),
+P('Timer',`<div class="row sp"><span class="num" id="tm" style="font-size:30px">${fmt(S.t)}</span><span class="sub">Rest <b id="rs" class="cy">${S.rest}s</b></span></div><div class="g3" style="margin-top:10px"><button class="btn2" data-a="tgl">${S.run?'Pause':'Resume'}</button><button class="btn2" data-a="rst">Reset</button><button class="btn2" data-a="load">Load +2</button></div>`),
+btn('Log Set','log'),`<button class="btn2" data-a="fin">Finish workout</button>`]},
+done:()=>[
+P('Workout Complete',`<div style="text-align:center;padding:8px 0"><div class="big" style="font:700 26px var(--fd);color:var(--c2)">QUEST CLEARED</div><div class="sub" style="margin-top:4px">Beginner Home A</div></div><div class="g3"><div class="cell"><div class="num">${fmt(S.t||2112)}</div><div class="mut">TIME</div></div><div class="cell"><div class="num">3</div><div class="mut">EXERCISES</div></div><div class="cell"><div class="num warn">+320</div><div class="mut">XP</div></div></div><div class="sep"></div><div class="row sp"><span class="sub">Personal record</span>${badge('Squat 40 kg','var(--ok)')}</div>`,'','hot'),
+btn('Continue','cont')],
+nutri:()=>[
+`<div class="h1">NUTRITION</div>`,
+P('Today',`<div class="row"><svg width="110" height="110" viewBox="0 0 110 110"><circle cx="55" cy="55" r="44" fill="none" style="stroke:#0d1d2e;stroke-width:8"/><circle cx="55" cy="55" r="44" fill="none" stroke-dasharray="276" stroke-dashoffset="${276*(1-.78)}" transform="rotate(-90 55 55)" style="stroke:var(--c1);stroke-width:8"/><text x="55" y="58" text-anchor="middle" style="fill:var(--tx);font:700 18px var(--fd)">1,640</text><text x="55" y="74" text-anchor="middle" style="fill:var(--tx3);font:12px var(--fb)">OF 2,100</text></svg><div class="grow"><div class="row sp"><span class="sub">Protein</span><span>92/120 g</span></div>${bar(77)}<div class="row sp" style="margin-top:6px"><span class="sub">Carbs</span><span>180/230 g</span></div>${bar(78,'w')}<div class="row sp" style="margin-top:6px"><span class="sub">Fat</span><span>48/65 g</span></div>${bar(74,'r')}</div></div>`),
+P('Meals',[['Breakfast','2 idli, sambar','320'],['Lunch','Rice, dal, curd','620'],['Snack','Roasted chana','190']].map(m=>`<div class="item"><div class="grow"><div>${m[0]}</div><div class="mut">${m[1]}</div></div><span class="cy">${m[2]} kcal</span></div>`).join('')+`<div class="mut" style="margin-top:6px">Illustrative values only.</div>`),
+P('Water',`<div class="row sp"><span class="num">${S.water} / 8</span><button class="btn2" data-a="water">+ Glass</button></div>${bar(S.water/8*100)}`)],
+stats:()=>[
+`<div class="h1">PROGRESS</div>`,chips(['7D','30D','90D'],S.range,'range'),
+P('Body Weight',line(R[S.range].w),'<b>kg · demo</b>'),
+P('Training Volume',bars(R[S.range].v),'<b>sets · demo</b>'),
+P('XP History',`<div class="row sp"><span class="num cy">+1,240</span><span class="sub">this period</span></div>`)],
+ach:()=>[
+`<div class="h1">ACHIEVEMENTS</div>`,
+P('Collection',`<div class="g3">${BADGES.map(b=>`<div class="cell" style="opacity:${b[2]?1:.4};border-color:${RC[b[1]]}"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="${RC[b[1]]}" stroke-width="1.6"><path d="M12 2l9 5v10l-9 5-9-5V7z"/>${b[2]?'<path d="M8 12l3 3 5-6"/>':'<path d="M9 11h6v5H9z"/>'}</svg><div style="font-size:13px">${b[0]}</div><div class="mut" style="color:${RC[b[1]]}">${b[1]}</div></div>`).join('')}</div>`),
+btn('Preview Rank Promotion','ov','rank')],
+prof:()=>[
+`<div class="h1">PROFILE</div>`,
+P('Hunter',`<div class="row">${avatar}<div class="grow"><div class="h1" style="font-size:15px">ARJUN</div><div class="sub">Goal: Build strength</div></div></div><div class="sep"></div><div class="row sp"><span class="sub">Experience</span><span>Beginner</span></div><div class="row sp"><span class="sub">Equipment</span><span>Dumbbells, bands</span></div><div class="row sp"><span class="sub">Schedule</span><span>4 days / week</span></div>`),
+P('Settings',`<div class="item"><span class="grow">Reduced motion</span>${sw('rm',S.rm)}</div><div class="item"><span class="grow">Sound</span>${sw('sound',S.sound)}</div><div class="item"><span class="grow">Units: ${S.unit}</span><button class="btn2" data-a="unit">Switch</button></div><div class="mut" style="margin-top:6px">Toggles are simulated. Nothing is saved.</div>`)],
+more:()=>[`<div class="h1">MORE</div>`,...[['nutri','Nutrition'],['stats','Analytics'],['ach','Achievements'],['prof','Profile & Settings']].map(([k,n])=>P(n,`<button class="btn2" style="width:100%" data-a="go" data-v="${k}">Open</button>`))]
+};
+const fmt=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+/* ===== RENDER ===== */
+const NAV=[['dash','System'],['quests','Quests'],['lib','Train'],['status','Status'],['more','More']];
+const grp=k=>({active:'lib',done:'lib',nutri:'more',stats:'more',ach:'more',prof:'more'}[k]||k);
+function render(){
+ document.body.classList.toggle('rm',S.rm);
+ $('#top').innerHTML=`<span class="brand">HUNTER SYSTEM</span><button class="ic" data-a="ov" data-v="notif" aria-label="Notifications">${svg('bell')}<span class="dot"></span></button>`;
+ const body=SC[S.scr]();$('#main').innerHTML=Array.isArray(body)?body.join(''):body;
+ $('#nav').innerHTML=NAV.map(([k,n])=>`<button class="${grp(S.scr)==k?'on':''}" data-a="go" data-v="${k}" aria-label="${n}">${svg(k)}<span>${n}</span></button>`).join('');
+ const o=S.ov;$('#ovl').innerHTML=!o?'':`<div class="ov" data-a="close"><div class="p hot" onclick="event.stopPropagation()">${o=='lvl'?`<div class="scan"></div><div class="mut">SYSTEM NOTIFICATION</div><div class="big" style="margin:10px 0">LEVEL UP</div><div class="h1">${S.lvl-1} → ${S.lvl}</div><div class="sub" style="margin:8px 0">+320 XP · Reward: Title “Iron Will”</div>${btn('Continue','close')}`:o=='rank'?`<div class="mut">RANK PROMOTION</div><div style="display:flex;justify-content:center;margin:26px 0">${rank('C')}</div><div class="h1">D → C</div><div class="sub" style="margin:8px 0">Preview only. Rank logic is not implemented.</div>${btn('Continue','close')}`:`<div class="ph"><span>Notifications</span></div>${['New quest available','Workout completed: +320 XP','Weekly summary ready'].map(t=>`<div class="item"><span class="grow">${t}</span></div>`).join('')}<button class="btn2" data-a="close" style="margin-top:10px;width:100%">Close</button>`}</div></div>`;
+}
+const $=s=>document.querySelector(s);
+function act(a,v){switch(a){
+ case'go':S.scr=v;S.ov=null;break;case'cat':S.cat=v;break;case'filt':S.filt=v;break;case'range':S.range=v;break;
+ case'tq':S.q[v]=!S.q[v];break;
+ case'start':S.scr='active';S.ei=0;S.set=1;S.run=true;S.t=0;S.paid=false;if(v&&isNaN(v)){const i=W.findIndex(w=>w[0]==v);S.ei=i<0?0:i}S.load=W[S.ei][1];break;
+ case'tgl':S.run=!S.run;break;case'rst':S.t=0;S.run=false;S.rest=0;break;case'load':S.load+=2;break;
+ case'log':S.rest=45;if(S.set<4)S.set++;else if(S.ei<2){S.ei++;S.set=1;S.load=W[S.ei][1]}else{S.scr='done';S.run=false;S.q[0]=true}break;
+ case'fin':S.scr='done';S.run=false;S.q[0]=true;break;
+ case'cont':if(!S.paid){S.paid=true;S.xp+=320;if(S.xp>=xpMax){S.xp-=xpMax;S.lvl++;S.ov='lvl'}}S.scr='dash';break;
+ case'pts':if(S.pts&&S.attr[v]<100){S.pts--;S.attr[v]++}break;
+ case'water':S.water=Math.min(8,S.water+1);break;case'unit':S.unit=S.unit=='kg'?'lb':'kg';break;
+ case'tog':S[v]=!S[v];break;case'ov':S.ov=v;break;case'close':S.ov=null;break}
+ render()}
+document.addEventListener('click',e=>{const a=e.target.closest('[data-a]');if(a&&!a.disabled)act(a.dataset.a,a.dataset.v)});
+setInterval(()=>{if(S.run)S.t++;if(S.rest>0)S.rest--;const t=$('#tm'),r=$('#rs');if(t)t.textContent=fmt(S.t);if(r)r.textContent=S.rest+'s'},1000);
+render();
+</script></body></html>
