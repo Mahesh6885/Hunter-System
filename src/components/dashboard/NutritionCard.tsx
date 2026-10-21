@@ -56,6 +56,9 @@ export const NutritionCard: React.FC<NutritionCardProps> = ({
       <View style={styles.macroRow}>
         <Text style={styles.macroText}>Carbs {nutrition.carbs} g</Text>
         <Text style={styles.macroText}>Fat {nutrition.fat} g</Text>
+        {nutrition.waterIntakeMl !== undefined && (
+          <Text style={styles.macroText}>Water {nutrition.waterIntakeMl} ml</Text>
+        )}
       </View>
     </SystemPanel>
   );

@@ -28,6 +28,8 @@ export interface NutritionOverview {
   proteinTarget: number;
   carbs: number;
   fat: number;
+  waterIntakeMl?: number;
+  waterTargetMl?: number;
 }
 
 export interface QuestBoardItem {
@@ -53,7 +55,7 @@ export interface HunterState {
   dailyQuests: DailyQuestItem[];
   training: TrainingPreview;
   nutrition: NutritionOverview;
-  activeScreen: 'dash' | 'quests' | 'lib' | 'status' | 'more';
+  activeScreen: 'dash' | 'quests' | 'lib' | 'status' | 'more' | 'nutrition';
   currentOverlay: 'lvl' | 'rank' | 'notif' | null;
   reducedMotion: boolean;
   soundEnabled: boolean;

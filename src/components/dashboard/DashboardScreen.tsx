@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { SPACING } from '../../theme';
 import { useHunter } from '../../context/HunterContext';
+import { useNutrition } from '../../context/NutritionContext';
 import { SystemStatusCard } from './SystemStatusCard';
 import { DailyQuestCard } from './DailyQuestCard';
 import { TodayTrainingCard } from './TodayTrainingCard';
@@ -16,6 +17,7 @@ export const DashboardScreen: React.FC = () => {
     completedQuestsCount,
     allDailyQuestsComplete,
   } = useHunter();
+  const { totals: nutritionTotals } = useNutrition();
 
   return (
     <ScrollView
@@ -46,8 +48,17 @@ export const DashboardScreen: React.FC = () => {
 
       {/* 5. Nutrition & Macros Panel */}
       <NutritionCard
-        nutrition={hunter.nutrition}
-        onOpenNutrition={() => setActiveScreen('more')}
+        nutrition={{
+          calories: nutritionTotals.calories,
+          caloriesTarget: nutritionTotals.caloriesTarget,
+          protein: nutritionTotals.protein,
+          proteinTarget: nutritionTotals.proteinTarget,
+          carbs: nutritionTotals.carbs,
+          fat: nutritionTotals.fat,
+          waterIntakeMl: nutritionTotals.waterIntakeMl,
+          waterTargetMl: nutritionTotals.waterTargetMl,
+        }}
+        onOpenNutrition={() => setActiveScreen('nutrition')}
       />
     </ScrollView>
   );

@@ -4,6 +4,7 @@ import { COLORS, SPACING, FONTS } from '../../theme';
 import { SystemPanel } from '../common/SystemPanel';
 import { SystemButton } from '../common/SystemButton';
 import { useHunter } from '../../context/HunterContext';
+import { useNutrition } from '../../context/NutritionContext';
 
 interface MoreScreenProps {
   onPreviewRank?: () => void;
@@ -12,11 +13,13 @@ interface MoreScreenProps {
 export const MoreScreen: React.FC<MoreScreenProps> = ({ onPreviewRank }) => {
   const {
     hunter,
+    setActiveScreen,
     toggleReducedMotion,
     toggleSound,
     toggleUnit,
     resetProgress,
   } = useHunter();
+  const { totals: nutritionTotals } = useNutrition();
 
   const handleReset = () => {
     Alert.alert(
@@ -107,9 +110,16 @@ export const MoreScreen: React.FC<MoreScreenProps> = ({ onPreviewRank }) => {
       </SystemPanel>
 
       {/* Other System Sections */}
-      <SystemPanel title="Nutrition & Meals">
+      <SystemPanel title="Nutrition & Meals" headerRight={
+        <SystemButton
+          label="OPEN"
+          variant="secondary"
+          onPress={() => setActiveScreen('nutrition')}
+          style={{ minWidth: 60, paddingVertical: 4 }}
+        />
+      }>
         <Text style={styles.sectionDesc}>
-          Macro targets: {hunter.nutrition.calories} / {hunter.nutrition.caloriesTarget} kcal · Protein {hunter.nutrition.protein}g / {hunter.nutrition.proteinTarget}g
+          Today: {nutritionTotals.calories} / {nutritionTotals.caloriesTarget} kcal · Protein {nutritionTotals.protein}g · Water {nutritionTotals.waterIntakeMl} ml
         </Text>
       </SystemPanel>
 

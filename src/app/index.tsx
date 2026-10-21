@@ -11,6 +11,7 @@ import { QuestsScreen } from '../components/screens/QuestsScreen';
 import { TrainScreen } from '../components/screens/TrainScreen';
 import { StatusScreen } from '../components/screens/StatusScreen';
 import { MoreScreen } from '../components/screens/MoreScreen';
+import { NutritionScreen } from '../components/screens/NutritionScreen';
 
 export default function MainApp() {
   const {
@@ -40,6 +41,12 @@ export default function MainApp() {
         return (
           <MoreScreen
             onPreviewRank={() => setOverlay('rank')}
+          />
+        );
+      case 'nutrition':
+        return (
+          <NutritionScreen
+            onBack={() => setActiveScreen('dash')}
           />
         );
       default:
