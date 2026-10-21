@@ -77,6 +77,7 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const accumulatedPausedMsRef = useRef<number>(0);
   const pauseStartTimeRef = useRef<number>(0);
   const restEndsAtRef = useRef<number>(0);
+  const isClaimingRef = useRef<boolean>(false);
 
   // Load history on mount
   const refreshHistory = useCallback(async () => {
@@ -446,32 +447,42 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setSession(INITIAL_SESSION_STATE);
   }, []);
 
-  // Claim XP rewards and persist to history
+  // Claim XP rewards and persist to history with race-condition lock
   const claimWorkoutRewards = useCallback(async () => {
-    if (session.status !== 'completed' || !session.completedSummary || session.isRewardClaimed) {
+    if (
+      isClaimingRef.current ||
+      session.status !== 'completed' ||
+      !session.completedSummary ||
+      session.isRewardClaimed
+    ) {
       return;
     }
 
-    const summary = session.completedSummary;
+    isClaimingRef.current = true;
+    try {
+      const summary = session.completedSummary;
 
-    // 1. Mark claimed to prevent double rewards
-    setSession((prev) => ({ ...prev, isRewardClaimed: true }));
+      // 1. Mark claimed to prevent double rewards
+      setSession((prev) => ({ ...prev, isRewardClaimed: true }));
 
-    // 2. Award XP through HunterContext
-    addXP(summary.xpAwarded);
+      // 2. Award XP through HunterContext
+      addXP(summary.xpAwarded);
 
-    // 3. Mark Daily Quest 1 ("Complete today's workout") as complete if workout occurred on today's calendar date
-    const workoutDateKey = getLocalDateKey(summary.completedAt);
-    completeWorkoutQuest(workoutDateKey);
+      // 3. Mark Daily Quest 1 ("Complete today's workout") as complete if workout occurred on today's calendar date
+      const workoutDateKey = getLocalDateKey(summary.completedAt);
+      completeWorkoutQuest(workoutDateKey);
 
-    // 4. Persist to Workout History storage
-    await saveWorkoutSession(summary);
+      // 4. Persist to Workout History storage
+      await saveWorkoutSession(summary);
 
-    // 5. Refresh history list
-    await refreshHistory();
+      // 5. Refresh history list
+      await refreshHistory();
 
-    // 6. Reset session back to idle
-    setSession(INITIAL_SESSION_STATE);
+      // 6. Reset session back to idle
+      setSession(INITIAL_SESSION_STATE);
+    } finally {
+      isClaimingRef.current = false;
+    }
   }, [session, addXP, completeWorkoutQuest, refreshHistory]);
 
   return (

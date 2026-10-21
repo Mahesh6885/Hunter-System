@@ -40,7 +40,8 @@
     "test:nutrition": "npx tsx scripts/verify-nutrition-engine.ts",
     "test:analytics": "npx tsx scripts/verify-analytics-achievements.ts",
     "test:profile": "npx tsx scripts/verify-profile-body-scan.ts",
-    "test": "npm run test:storage && npm run test:workout && npm run test:streak && npm run test:nutrition && npm run test:analytics && npm run test:profile"
+    "test:integration": "npx tsx scripts/verify-final-integration.ts",
+    "test": "npm run test:storage && npm run test:workout && npm run test:streak && npm run test:nutrition && npm run test:analytics && npm run test:profile && npm run test:integration"
   },
   "private": true
 }

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Achievement, AchievementStoragePayload } from '../types/achievements';
 import { loadAchievementStorage, saveAchievementStorage } from '../storage/achievementStorage';
 import { evaluateAchievements } from '../utils/achievementEngine';
@@ -27,6 +27,7 @@ export const AchievementProvider: React.FC<{ children: React.ReactNode }> = ({ c
     version: 1,
     unlocked: {},
   });
+  const claimingIdsRef = useRef<Set<string>>(new Set());
 
   // 1. Initial hydration from storage
   useEffect(() => {
@@ -71,6 +72,10 @@ export const AchievementProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // 3. Claim XP for an unlocked achievement
   const claimAchievementXp = useCallback(
     async (id: string): Promise<{ success: boolean; xpAwarded: number }> => {
+      if (claimingIdsRef.current.has(id)) {
+        return { success: false, xpAwarded: 0 };
+      }
+
       const achievement = evaluationResult.achievements.find((a) => a.id === id);
       if (!achievement || !achievement.isUnlocked) {
         return { success: false, xpAwarded: 0 };
@@ -82,25 +87,30 @@ export const AchievementProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return { success: false, xpAwarded: 0 };
       }
 
-      // Mark claimed and persist
-      const updatedStorage: AchievementStoragePayload = {
-        ...storage,
-        unlocked: {
-          ...storage.unlocked,
-          [id]: {
-            unlockedAt: existingRecord?.unlockedAt || Date.now(),
-            xpClaimed: true,
+      claimingIdsRef.current.add(id);
+      try {
+        // Mark claimed and persist
+        const updatedStorage: AchievementStoragePayload = {
+          ...storage,
+          unlocked: {
+            ...storage.unlocked,
+            [id]: {
+              unlockedAt: existingRecord?.unlockedAt || Date.now(),
+              xpClaimed: true,
+            },
           },
-        },
-      };
+        };
 
-      setStorage(updatedStorage);
-      await saveAchievementStorage(updatedStorage);
+        setStorage(updatedStorage);
+        await saveAchievementStorage(updatedStorage);
 
-      // Award XP to hunter
-      addXP(achievement.xpReward);
+        // Award XP to hunter
+        addXP(achievement.xpReward);
 
-      return { success: true, xpAwarded: achievement.xpReward };
+        return { success: true, xpAwarded: achievement.xpReward };
+      } finally {
+        claimingIdsRef.current.delete(id);
+      }
     },
     [evaluationResult.achievements, storage, addXP]
   );

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../theme';
 import { useHunter } from '../context/HunterContext';
@@ -25,6 +25,51 @@ export default function MainApp() {
     closeOverlay,
     allocateAttributePoint,
   } = useHunter();
+
+  // Android hardware back button handler
+  useEffect(() => {
+    const onBackPress = () => {
+      // 1. Close open modal overlay first if active
+      if (hunter.currentOverlay !== null) {
+        closeOverlay();
+        return true;
+      }
+
+      // 2. Step back from tertiary/secondary screens
+      if (hunter.activeScreen === 'bodyScan') {
+        setActiveScreen('analytics');
+        return true;
+      }
+      if (
+        hunter.activeScreen === 'analytics' ||
+        hunter.activeScreen === 'achievements' ||
+        hunter.activeScreen === 'profile'
+      ) {
+        setActiveScreen('more');
+        return true;
+      }
+      if (hunter.activeScreen === 'nutrition') {
+        setActiveScreen('dash');
+        return true;
+      }
+
+      // 3. From main tab screens (quests, train, status, more), return to dash
+      if (hunter.activeScreen !== 'dash') {
+        setActiveScreen('dash');
+        return true;
+      }
+
+      // 4. On dashboard with no overlays, allow standard Android exit
+      return false;
+    };
+
+    const backSubscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      onBackPress
+    );
+
+    return () => backSubscription.remove();
+  }, [hunter.currentOverlay, hunter.activeScreen, closeOverlay, setActiveScreen]);
 
   const renderActiveScreen = () => {
     switch (hunter.activeScreen) {

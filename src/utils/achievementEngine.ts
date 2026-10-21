@@ -73,7 +73,11 @@ export function evaluateAchievements(ctx: EvaluationContext): EvaluationResult {
   // Best streak
   const bestStreak = Math.max(hunter.streakDays || 0, calculateBestStreak(safeActivityDates));
 
-  const nextUnlockedRecord = { ...storage.unlocked };
+  const safeStorage = storage && typeof storage === 'object' && storage.unlocked
+    ? storage
+    : { version: 1, unlocked: {} };
+
+  const nextUnlockedRecord = { ...safeStorage.unlocked };
   const newlyUnlocked: Achievement[] = [];
   const achievements: Achievement[] = [];
 

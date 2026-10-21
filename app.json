@@ -8,6 +8,9 @@
     "scheme": "sololevelingfitness",
     "userInterfaceStyle": "dark",
     "android": {
+      "package": "com.sololeveling.huntersystem",
+      "versionCode": 1,
+      "permissions": [],
       "adaptiveIcon": {
         "backgroundColor": "#05080D",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
