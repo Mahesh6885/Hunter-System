@@ -1,4 +1,16 @@
 import { HunterState } from '../types/hunter';
+import { getLocalDateKey, addDaysToDateKey, calculateStreak, calculateWeekActivity } from '../utils/dateEngine';
+
+const todayKey = getLocalDateKey();
+
+// Generate past 12 consecutive active days ending yesterday to establish baseline
+const initialCompletedDates: string[] = [];
+for (let i = 12; i >= 1; i--) {
+  initialCompletedDates.push(addDaysToDateKey(todayKey, -i));
+}
+
+const initialStreak = calculateStreak(initialCompletedDates, todayKey);
+const initialWeek = calculateWeekActivity(initialCompletedDates, todayKey);
 
 export const INITIAL_HUNTER_STATE: HunterState = {
   name: 'ARJUN',
@@ -6,8 +18,8 @@ export const INITIAL_HUNTER_STATE: HunterState = {
   level: 14,
   xp: 2780,
   maxXP: 3000,
-  streakDays: 12,
-  weekActivity: [true, true, true, true, true, true, false],
+  streakDays: initialStreak,
+  weekActivity: initialWeek,
   attributes: {
     strength: 42,
     endurance: 35,
@@ -54,6 +66,10 @@ export const INITIAL_HUNTER_STATE: HunterState = {
   reducedMotion: false,
   soundEnabled: true,
   unit: 'kg',
+  lastActiveDate: todayKey,
+  questCompletedDates: {},
+  questXpClaimedDates: {},
+  completedActivityDates: initialCompletedDates,
 };
 
 export const NOTIFICATIONS = [

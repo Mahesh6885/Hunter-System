@@ -9,6 +9,7 @@ import {
 import { EXERCISE_LIBRARY, WORKOUT_ROUTINES } from '../data/workoutData';
 import { loadWorkoutHistory, saveWorkoutSession } from '../storage/workoutStorageService';
 import { useHunter } from './HunterContext';
+import { getLocalDateKey } from '../utils/dateEngine';
 
 export interface WorkoutSessionState {
   id: string;
@@ -66,7 +67,7 @@ const INITIAL_SESSION_STATE: WorkoutSessionState = {
 const WorkoutContext = createContext<WorkoutContextType | undefined>(undefined);
 
 export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { addXP, hunter, toggleDailyQuest } = useHunter();
+  const { addXP, completeWorkoutQuest } = useHunter();
   const [session, setSession] = useState<WorkoutSessionState>(INITIAL_SESSION_STATE);
   const [history, setHistory] = useState<WorkoutHistoryRecord[]>([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState<boolean>(true);
@@ -459,11 +460,9 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // 2. Award XP through HunterContext
     addXP(summary.xpAwarded);
 
-    // 3. Mark Daily Quest 1 ("Complete today's workout") as complete if not already
-    const workoutQuest = hunter.dailyQuests[0];
-    if (workoutQuest && !workoutQuest.completed) {
-      toggleDailyQuest(workoutQuest.id);
-    }
+    // 3. Mark Daily Quest 1 ("Complete today's workout") as complete if workout occurred on today's calendar date
+    const workoutDateKey = getLocalDateKey(summary.completedAt);
+    completeWorkoutQuest(workoutDateKey);
 
     // 4. Persist to Workout History storage
     await saveWorkoutSession(summary);
@@ -473,7 +472,7 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     // 6. Reset session back to idle
     setSession(INITIAL_SESSION_STATE);
-  }, [session, addXP, hunter.dailyQuests, toggleDailyQuest, refreshHistory]);
+  }, [session, addXP, completeWorkoutQuest, refreshHistory]);
 
   return (
     <WorkoutContext.Provider

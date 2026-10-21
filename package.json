@@ -36,7 +36,8 @@
     "web": "expo start --web",
     "test:storage": "npx tsx scripts/verify-storage.ts",
     "test:workout": "npx tsx scripts/verify-workout-engine.ts",
-    "test": "npm run test:storage && npm run test:workout"
+    "test:streak": "npx tsx scripts/verify-daily-quest-streak.ts",
+    "test": "npm run test:storage && npm run test:workout && npm run test:streak"
   },
   "private": true
 }

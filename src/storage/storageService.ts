@@ -1,16 +1,29 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HunterState, HunterRank, HunterAttributes, DailyQuestItem } from '../types/hunter';
 import { INITIAL_HUNTER_STATE } from '../data/mockData';
+import {
+  getLocalDateKey,
+  isValidDateKey,
+  calculateStreak,
+  calculateWeekActivity,
+} from '../utils/dateEngine';
 
 export const HUNTER_STORAGE_KEY = '@hunter_system_state_v1';
 
 /**
  * Defensively cleans and merges stored state with default fallback values.
- * Protects against corrupted values, missing fields, or schema evolution.
+ * Handles schema evolution, corrupted values, and local calendar date rollovers.
  */
-export function sanitizeHunterState(raw: unknown): HunterState {
+export function sanitizeHunterState(raw: unknown, referenceDateKey?: string): HunterState {
+  const todayKey = referenceDateKey || getLocalDateKey();
+
   if (!raw || typeof raw !== 'object') {
-    return { ...INITIAL_HUNTER_STATE };
+    return {
+      ...INITIAL_HUNTER_STATE,
+      lastActiveDate: todayKey,
+      streakDays: calculateStreak(INITIAL_HUNTER_STATE.completedActivityDates, todayKey),
+      weekActivity: calculateWeekActivity(INITIAL_HUNTER_STATE.completedActivityDates, todayKey),
+    };
   }
 
   const rawObj = raw as Record<string, any>;
@@ -31,20 +44,63 @@ export function sanitizeHunterState(raw: unknown): HunterState {
     discipline: typeof rawAttrs.discipline === 'number' && !isNaN(rawAttrs.discipline) ? rawAttrs.discipline : INITIAL_HUNTER_STATE.attributes.discipline,
   };
 
-  // Validate daily quests
-  const dailyQuests: DailyQuestItem[] = Array.isArray(rawObj.dailyQuests) && rawObj.dailyQuests.length > 0
-    ? rawObj.dailyQuests.map((q, idx) => ({
-        id: typeof q?.id === 'string' ? q.id : `q${idx + 1}`,
-        label: typeof q?.label === 'string' ? q.label : INITIAL_HUNTER_STATE.dailyQuests[idx]?.label ?? 'Daily Quest',
-        completed: Boolean(q?.completed),
-        xpReward: typeof q?.xpReward === 'number' && !isNaN(q.xpReward) ? q.xpReward : 50,
-      }))
-    : INITIAL_HUNTER_STATE.dailyQuests;
+  // Validate date records
+  const lastActiveDate = isValidDateKey(rawObj.lastActiveDate)
+    ? rawObj.lastActiveDate
+    : todayKey;
 
-  // Validate week activity array
-  const weekActivity = Array.isArray(rawObj.weekActivity) && rawObj.weekActivity.length === 7
-    ? rawObj.weekActivity.map(Boolean)
-    : INITIAL_HUNTER_STATE.weekActivity;
+  const questCompletedDates: Record<string, string[]> =
+    rawObj.questCompletedDates && typeof rawObj.questCompletedDates === 'object'
+      ? { ...rawObj.questCompletedDates }
+      : {};
+
+  const questXpClaimedDates: Record<string, string[]> =
+    rawObj.questXpClaimedDates && typeof rawObj.questXpClaimedDates === 'object'
+      ? { ...rawObj.questXpClaimedDates }
+      : {};
+
+  const completedActivityDates: string[] = Array.isArray(rawObj.completedActivityDates)
+    ? Array.from(new Set(rawObj.completedActivityDates.filter(isValidDateKey)))
+    : [...INITIAL_HUNTER_STATE.completedActivityDates];
+
+  // Check if calendar date rolled over to a new day
+  const isNewDay = lastActiveDate !== todayKey;
+
+  // Base template of daily quests
+  const baseQuests = INITIAL_HUNTER_STATE.dailyQuests;
+
+  let dailyQuests: DailyQuestItem[];
+
+  if (isNewDay) {
+    // On a new day, daily quests reset to uncompleted
+    dailyQuests = baseQuests.map((q) => ({
+      ...q,
+      completed: false,
+    }));
+  } else {
+    // On the same day, restore quest completion from today's ledger or raw dailyQuests
+    const todayCompletedQuestIds = new Set(questCompletedDates[todayKey] || []);
+    
+    // Also check if rawObj.dailyQuests had completed: true
+    if (Array.isArray(rawObj.dailyQuests)) {
+      rawObj.dailyQuests.forEach((q: any) => {
+        if (q && q.completed && typeof q.id === 'string') {
+          todayCompletedQuestIds.add(q.id);
+        }
+      });
+    }
+
+    dailyQuests = baseQuests.map((q, idx) => ({
+      id: q.id,
+      label: q.label,
+      completed: todayCompletedQuestIds.has(q.id),
+      xpReward: q.xpReward,
+    }));
+  }
+
+  // Calculate real streak and week activity relative to todayKey
+  const streakDays = calculateStreak(completedActivityDates, todayKey);
+  const weekActivity = calculateWeekActivity(completedActivityDates, todayKey);
 
   // Numbers validation with strict NaN handling and clamping
   const level = typeof rawObj.level === 'number' && !isNaN(rawObj.level)
@@ -58,10 +114,6 @@ export function sanitizeHunterState(raw: unknown): HunterState {
   const maxXP = typeof rawObj.maxXP === 'number' && !isNaN(rawObj.maxXP)
     ? Math.max(100, rawObj.maxXP)
     : INITIAL_HUNTER_STATE.maxXP;
-
-  const streakDays = typeof rawObj.streakDays === 'number' && !isNaN(rawObj.streakDays)
-    ? Math.max(0, rawObj.streakDays)
-    : INITIAL_HUNTER_STATE.streakDays;
 
   const statPoints = typeof rawObj.statPoints === 'number' && !isNaN(rawObj.statPoints)
     ? Math.max(0, rawObj.statPoints)
@@ -86,6 +138,10 @@ export function sanitizeHunterState(raw: unknown): HunterState {
     reducedMotion: Boolean(rawObj.reducedMotion),
     soundEnabled: rawObj.soundEnabled !== false,
     unit: rawObj.unit === 'lb' ? 'lb' : 'kg',
+    lastActiveDate: todayKey,
+    questCompletedDates,
+    questXpClaimedDates,
+    completedActivityDates,
   };
 }
 
@@ -93,17 +149,17 @@ export function sanitizeHunterState(raw: unknown): HunterState {
  * Loads Hunter state from local AsyncStorage.
  * Falls back safely to initial mock state if empty or corrupted.
  */
-export async function loadHunterState(): Promise<HunterState> {
+export async function loadHunterState(referenceDateKey?: string): Promise<HunterState> {
   try {
     const rawJson = await AsyncStorage.getItem(HUNTER_STORAGE_KEY);
     if (!rawJson) {
-      return { ...INITIAL_HUNTER_STATE };
+      return sanitizeHunterState(null, referenceDateKey);
     }
     const parsed = JSON.parse(rawJson);
-    return sanitizeHunterState(parsed);
+    return sanitizeHunterState(parsed, referenceDateKey);
   } catch (error) {
     console.warn('[Hunter Storage] Failed to load state from storage, falling back to initial state:', error);
-    return { ...INITIAL_HUNTER_STATE };
+    return sanitizeHunterState(null, referenceDateKey);
   }
 }
 

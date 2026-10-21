@@ -1,12 +1,19 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
-import { HunterState, HunterAttributes } from '../types/hunter';
+import { AppState, AppStateStatus } from 'react-native';
+import { HunterState, HunterAttributes, DailyQuestItem } from '../types/hunter';
 import { INITIAL_HUNTER_STATE } from '../data/mockData';
-import { loadHunterState, saveHunterState, clearHunterState } from '../storage/storageService';
+import { loadHunterState, saveHunterState, clearHunterState, sanitizeHunterState } from '../storage/storageService';
+import {
+  getLocalDateKey,
+  calculateStreak,
+  calculateWeekActivity,
+} from '../utils/dateEngine';
 
 interface HunterContextType {
   hunter: HunterState;
   isHydrated: boolean;
   toggleDailyQuest: (id: string) => void;
+  completeWorkoutQuest: (workoutDateKey: string) => void;
   allocateAttributePoint: (attribute: keyof HunterAttributes) => void;
   setActiveScreen: (screen: HunterState['activeScreen']) => void;
   setOverlay: (overlay: HunterState['currentOverlay']) => void;
@@ -16,6 +23,7 @@ interface HunterContextType {
   toggleSound: () => void;
   toggleUnit: () => void;
   resetProgress: () => Promise<void>;
+  checkDateRollover: () => void;
   completedQuestsCount: number;
   allDailyQuestsComplete: boolean;
 }
@@ -59,7 +67,34 @@ export const HunterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [hunter, isHydrated]);
 
+  // Check date rollover when app comes back to foreground
+  const checkDateRollover = useCallback(() => {
+    const today = getLocalDateKey();
+    setHunter((prev) => {
+      if (prev.lastActiveDate === today) {
+        return prev;
+      }
+      // Date rolled over to a new calendar day
+      return sanitizeHunterState(prev, today);
+    });
+  }, []);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        checkDateRollover();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [checkDateRollover]);
+
+  // Toggle daily quest completion with strict single-claim XP guard
   const toggleDailyQuest = useCallback((id: string) => {
+    const today = getLocalDateKey();
+
     setHunter((prev) => {
       const targetQuest = prev.dailyQuests.find((q) => q.id === id);
       if (!targetQuest) return prev;
@@ -69,16 +104,40 @@ export const HunterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         q.id === id ? { ...q, completed: isNowCompleted } : q
       );
 
-      const xpDelta = isNowCompleted ? targetQuest.xpReward : -targetQuest.xpReward;
-      let newXp = Math.max(0, prev.xp + xpDelta);
+      // Ledger tracking for today
+      const todayCompletedQuests = new Set(prev.questCompletedDates[today] || []);
+      const todayClaimedXp = new Set(prev.questXpClaimedDates[today] || []);
+
+      let newXp = prev.xp;
       let newLevel = prev.level;
       let overlay = prev.currentOverlay;
 
-      if (newXp >= prev.maxXP) {
-        newXp -= prev.maxXP;
-        newLevel += 1;
-        overlay = 'lvl';
+      if (isNowCompleted) {
+        todayCompletedQuests.add(id);
+
+        // Check if XP for this quest on this calendar date was already claimed
+        if (!todayClaimedXp.has(id)) {
+          todayClaimedXp.add(id);
+          newXp += targetQuest.xpReward;
+
+          if (newXp >= prev.maxXP) {
+            newXp -= prev.maxXP;
+            newLevel += 1;
+            overlay = 'lvl';
+          }
+        }
+      } else {
+        todayCompletedQuests.delete(id);
+        // Do not deduct claimed XP, but keep it in claimed ledger so repeated toggling cannot farm XP
       }
+
+      // Record activity date if completed
+      const updatedActivityDates = isNowCompleted
+        ? Array.from(new Set([...prev.completedActivityDates, today]))
+        : prev.completedActivityDates;
+
+      const streakDays = calculateStreak(updatedActivityDates, today);
+      const weekActivity = calculateWeekActivity(updatedActivityDates, today);
 
       return {
         ...prev,
@@ -86,6 +145,88 @@ export const HunterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         xp: newXp,
         level: newLevel,
         currentOverlay: overlay,
+        streakDays,
+        weekActivity,
+        lastActiveDate: today,
+        questCompletedDates: {
+          ...prev.questCompletedDates,
+          [today]: Array.from(todayCompletedQuests),
+        },
+        questXpClaimedDates: {
+          ...prev.questXpClaimedDates,
+          [today]: Array.from(todayClaimedXp),
+        },
+        completedActivityDates: updatedActivityDates,
+      };
+    });
+  }, []);
+
+  // Completes the daily workout quest only if the workout occurred on the local calendar date of today
+  const completeWorkoutQuest = useCallback((workoutDateKey: string) => {
+    const today = getLocalDateKey();
+
+    setHunter((prev) => {
+      // Record activity on the workout's actual completion date
+      const updatedActivityDates = Array.from(new Set([...prev.completedActivityDates, workoutDateKey]));
+      const streakDays = calculateStreak(updatedActivityDates, today);
+      const weekActivity = calculateWeekActivity(updatedActivityDates, today);
+
+      // If workout was completed yesterday or on another date, do NOT mark today's quest complete
+      if (workoutDateKey !== today) {
+        return {
+          ...prev,
+          completedActivityDates: updatedActivityDates,
+          streakDays,
+          weekActivity,
+        };
+      }
+
+      // Workout occurred TODAY: mark quest 0 ("q1" - "Complete today's workout") as completed
+      const workoutQuest = prev.dailyQuests[0];
+      if (!workoutQuest) return prev;
+
+      const todayCompletedQuests = new Set(prev.questCompletedDates[today] || []);
+      const todayClaimedXp = new Set(prev.questXpClaimedDates[today] || []);
+
+      todayCompletedQuests.add(workoutQuest.id);
+
+      let newXp = prev.xp;
+      let newLevel = prev.level;
+      let overlay = prev.currentOverlay;
+
+      if (!todayClaimedXp.has(workoutQuest.id)) {
+        todayClaimedXp.add(workoutQuest.id);
+        newXp += workoutQuest.xpReward;
+
+        if (newXp >= prev.maxXP) {
+          newXp -= prev.maxXP;
+          newLevel += 1;
+          overlay = 'lvl';
+        }
+      }
+
+      const updatedQuests = prev.dailyQuests.map((q) =>
+        q.id === workoutQuest.id ? { ...q, completed: true } : q
+      );
+
+      return {
+        ...prev,
+        dailyQuests: updatedQuests,
+        xp: newXp,
+        level: newLevel,
+        currentOverlay: overlay,
+        streakDays,
+        weekActivity,
+        lastActiveDate: today,
+        questCompletedDates: {
+          ...prev.questCompletedDates,
+          [today]: Array.from(todayCompletedQuests),
+        },
+        questXpClaimedDates: {
+          ...prev.questXpClaimedDates,
+          [today]: Array.from(todayClaimedXp),
+        },
+        completedActivityDates: updatedActivityDates,
       };
     });
   }, []);
@@ -153,7 +294,7 @@ export const HunterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const resetProgress = useCallback(async () => {
     await clearHunterState();
-    setHunter({ ...INITIAL_HUNTER_STATE });
+    setHunter(sanitizeHunterState(null));
   }, []);
 
   const completedQuestsCount = useMemo(() => {
@@ -170,6 +311,7 @@ export const HunterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         hunter,
         isHydrated,
         toggleDailyQuest,
+        completeWorkoutQuest,
         allocateAttributePoint,
         setActiveScreen,
         setOverlay,
@@ -179,6 +321,7 @@ export const HunterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         toggleSound,
         toggleUnit,
         resetProgress,
+        checkDateRollover,
         completedQuestsCount,
         allDailyQuestsComplete,
       }}>

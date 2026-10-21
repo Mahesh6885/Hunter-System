@@ -58,4 +58,9 @@ export interface HunterState {
   reducedMotion: boolean;
   soundEnabled: boolean;
   unit: 'kg' | 'lb';
+  // Date & Streak Engine Fields
+  lastActiveDate: string; // 'YYYY-MM-DD'
+  questCompletedDates: Record<string, string[]>; // { 'YYYY-MM-DD': ['q1', 'q2'] }
+  questXpClaimedDates: Record<string, string[]>; // { 'YYYY-MM-DD': ['q1'] }
+  completedActivityDates: string[]; // List of unique 'YYYY-MM-DD' dates with completed activity
 }
