@@ -17,6 +17,7 @@ import {
 import { HunterProvider } from '../context/HunterContext';
 import { WorkoutProvider } from '../context/WorkoutContext';
 import { NutritionProvider } from '../context/NutritionContext';
+import { AchievementProvider } from '../context/AchievementContext';
 import { COLORS } from '../theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -49,10 +50,12 @@ export default function RootLayout() {
       <HunterProvider>
         <WorkoutProvider>
           <NutritionProvider>
-            <StatusBar style="light" />
-            <View style={styles.appContainer}>
-              <Slot />
-            </View>
+            <AchievementProvider>
+              <StatusBar style="light" />
+              <View style={styles.appContainer}>
+                <Slot />
+              </View>
+            </AchievementProvider>
           </NutritionProvider>
         </WorkoutProvider>
       </HunterProvider>

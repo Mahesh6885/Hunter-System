@@ -5,6 +5,7 @@ import { SystemPanel } from '../common/SystemPanel';
 import { SystemButton } from '../common/SystemButton';
 import { useHunter } from '../../context/HunterContext';
 import { useNutrition } from '../../context/NutritionContext';
+import { useAchievements } from '../../context/AchievementContext';
 
 interface MoreScreenProps {
   onPreviewRank?: () => void;
@@ -20,6 +21,7 @@ export const MoreScreen: React.FC<MoreScreenProps> = ({ onPreviewRank }) => {
     resetProgress,
   } = useHunter();
   const { totals: nutritionTotals } = useNutrition();
+  const { unlockedCount, totalCount, totalXpClaimed } = useAchievements();
 
   const handleReset = () => {
     Alert.alert(
@@ -123,15 +125,29 @@ export const MoreScreen: React.FC<MoreScreenProps> = ({ onPreviewRank }) => {
         </Text>
       </SystemPanel>
 
-      <SystemPanel title="Progress & Analytics">
+      <SystemPanel title="Progress & Analytics" headerRight={
+        <SystemButton
+          label="VIEW"
+          variant="secondary"
+          onPress={() => setActiveScreen('analytics')}
+          style={{ minWidth: 60, paddingVertical: 4 }}
+        />
+      }>
         <Text style={styles.sectionDesc}>
           Current streak: {hunter.streakDays} consecutive days · Level {hunter.level} Hunter
         </Text>
       </SystemPanel>
 
-      <SystemPanel title="Achievements & Trophies">
+      <SystemPanel title="Achievements & Trophies" headerRight={
+        <SystemButton
+          label="VIEW"
+          variant="secondary"
+          onPress={() => setActiveScreen('achievements')}
+          style={{ minWidth: 60, paddingVertical: 4 }}
+        />
+      }>
         <Text style={styles.sectionDesc}>
-          Unlocked: First Gate, 7-Day Streak, Iron Will
+          {unlockedCount} / {totalCount} unlocked · +{totalXpClaimed} XP Claimed
         </Text>
       </SystemPanel>
 

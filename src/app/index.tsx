@@ -12,6 +12,8 @@ import { TrainScreen } from '../components/screens/TrainScreen';
 import { StatusScreen } from '../components/screens/StatusScreen';
 import { MoreScreen } from '../components/screens/MoreScreen';
 import { NutritionScreen } from '../components/screens/NutritionScreen';
+import { AnalyticsScreen } from '../components/screens/AnalyticsScreen';
+import { AchievementsScreen } from '../components/screens/AchievementsScreen';
 
 export default function MainApp() {
   const {
@@ -47,6 +49,20 @@ export default function MainApp() {
         return (
           <NutritionScreen
             onBack={() => setActiveScreen('dash')}
+          />
+        );
+      case 'analytics':
+        return (
+          <AnalyticsScreen
+            onBack={() => setActiveScreen('more')}
+            onOpenAchievements={() => setActiveScreen('achievements')}
+          />
+        );
+      case 'achievements':
+        return (
+          <AchievementsScreen
+            onBack={() => setActiveScreen('more')}
+            onOpenAnalytics={() => setActiveScreen('analytics')}
           />
         );
       default:

@@ -38,7 +38,8 @@
     "test:workout": "npx tsx scripts/verify-workout-engine.ts",
     "test:streak": "npx tsx scripts/verify-daily-quest-streak.ts",
     "test:nutrition": "npx tsx scripts/verify-nutrition-engine.ts",
-    "test": "npm run test:storage && npm run test:workout && npm run test:streak && npm run test:nutrition"
+    "test:analytics": "npx tsx scripts/verify-analytics-achievements.ts",
+    "test": "npm run test:storage && npm run test:workout && npm run test:streak && npm run test:nutrition && npm run test:analytics"
   },
   "private": true
 }

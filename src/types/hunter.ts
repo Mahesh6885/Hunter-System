@@ -55,7 +55,7 @@ export interface HunterState {
   dailyQuests: DailyQuestItem[];
   training: TrainingPreview;
   nutrition: NutritionOverview;
-  activeScreen: 'dash' | 'quests' | 'lib' | 'status' | 'more' | 'nutrition';
+  activeScreen: 'dash' | 'quests' | 'lib' | 'status' | 'more' | 'nutrition' | 'analytics' | 'achievements';
   currentOverlay: 'lvl' | 'rank' | 'notif' | null;
   reducedMotion: boolean;
   soundEnabled: boolean;

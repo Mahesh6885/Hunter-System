@@ -30,6 +30,7 @@ interface NutritionContextType {
   customFoods: FoodItem[];
   catalogue: FoodItem[];
   dayRecord: NutritionDayRecord;
+  dayRecords: Record<string, NutritionDayRecord>;
   totals: DailyNutritionTotals;
   setCurrentDateKey: (dateKey: string) => void;
   goToToday: () => void;
@@ -455,6 +456,7 @@ export const NutritionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       customFoods,
       catalogue,
       dayRecord: activeDayRecord,
+      dayRecords,
       totals,
       setCurrentDateKey,
       goToToday,
@@ -476,6 +478,7 @@ export const NutritionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       customFoods,
       catalogue,
       activeDayRecord,
+      dayRecords,
       totals,
       goToToday,
       addFoodEntry,
