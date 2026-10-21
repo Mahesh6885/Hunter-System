@@ -28,7 +28,7 @@ export default function MainApp() {
       case 'quests':
         return <QuestsScreen />;
       case 'lib':
-        return <TrainScreen onStartRoutine={() => setActiveScreen('dash')} />;
+        return <TrainScreen />;
       case 'status':
         return (
           <StatusScreen

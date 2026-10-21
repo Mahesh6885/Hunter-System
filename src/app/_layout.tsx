@@ -15,6 +15,7 @@ import {
   Rajdhani_700Bold,
 } from '@expo-google-fonts/rajdhani';
 import { HunterProvider } from '../context/HunterContext';
+import { WorkoutProvider } from '../context/WorkoutContext';
 import { COLORS } from '../theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -45,10 +46,12 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <HunterProvider>
-        <StatusBar style="light" />
-        <View style={styles.appContainer}>
-          <Slot />
-        </View>
+        <WorkoutProvider>
+          <StatusBar style="light" />
+          <View style={styles.appContainer}>
+            <Slot />
+          </View>
+        </WorkoutProvider>
       </HunterProvider>
     </SafeAreaProvider>
   );

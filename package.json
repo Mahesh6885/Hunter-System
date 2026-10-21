@@ -34,7 +34,9 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "test:storage": "npx tsx scripts/verify-storage.ts"
+    "test:storage": "npx tsx scripts/verify-storage.ts",
+    "test:workout": "npx tsx scripts/verify-workout-engine.ts",
+    "test": "npm run test:storage && npm run test:workout"
   },
   "private": true
 }
