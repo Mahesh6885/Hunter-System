@@ -6,6 +6,8 @@ import { SystemButton } from '../common/SystemButton';
 import { useHunter } from '../../context/HunterContext';
 import { useNutrition } from '../../context/NutritionContext';
 import { useAchievements } from '../../context/AchievementContext';
+import { useBodyScan } from '../../context/BodyScanContext';
+import { formatWeight } from '../../utils/weightConversions';
 
 interface MoreScreenProps {
   onPreviewRank?: () => void;
@@ -22,6 +24,7 @@ export const MoreScreen: React.FC<MoreScreenProps> = ({ onPreviewRank }) => {
   } = useHunter();
   const { totals: nutritionTotals } = useNutrition();
   const { unlockedCount, totalCount, totalXpClaimed } = useAchievements();
+  const { summary: bodyScanSummary } = useBodyScan();
 
   const handleReset = () => {
     Alert.alert(
@@ -112,6 +115,34 @@ export const MoreScreen: React.FC<MoreScreenProps> = ({ onPreviewRank }) => {
       </SystemPanel>
 
       {/* Other System Sections */}
+      <SystemPanel title="Hunter Profile & Personal Records" headerRight={
+        <SystemButton
+          label="OPEN"
+          variant="secondary"
+          onPress={() => setActiveScreen('profile')}
+          style={{ minWidth: 60, paddingVertical: 4 }}
+        />
+      }>
+        <Text style={styles.sectionDesc}>
+          Level {hunter.level} · Rank {hunter.rank} · {hunter.title || 'Shadow Initiate'} · Verified PRs & Telemetry
+        </Text>
+      </SystemPanel>
+
+      <SystemPanel title="Body Scan & Weight Telemetry" headerRight={
+        <SystemButton
+          label="OPEN"
+          variant="secondary"
+          onPress={() => setActiveScreen('bodyScan')}
+          style={{ minWidth: 60, paddingVertical: 4 }}
+        />
+      }>
+        <Text style={styles.sectionDesc}>
+          {bodyScanSummary.latestEntry
+            ? `Latest: ${formatWeight(bodyScanSummary.latestEntry.weightKg, hunter.unit)} (${bodyScanSummary.latestEntry.dateKey}) · ${bodyScanSummary.totalEntriesCount} scans`
+            : 'No body scan records logged yet. Tap OPEN to record baseline.'}
+        </Text>
+      </SystemPanel>
+
       <SystemPanel title="Nutrition & Meals" headerRight={
         <SystemButton
           label="OPEN"

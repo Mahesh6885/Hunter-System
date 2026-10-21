@@ -70,6 +70,8 @@ export const INITIAL_HUNTER_STATE: HunterState = {
   questCompletedDates: {},
   questXpClaimedDates: {},
   completedActivityDates: initialCompletedDates,
+  title: 'Shadow Initiate',
+  avatarId: 'monarch',
 };
 
 export const NOTIFICATIONS = [

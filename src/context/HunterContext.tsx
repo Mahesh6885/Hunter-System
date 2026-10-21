@@ -22,6 +22,7 @@ interface HunterContextType {
   toggleReducedMotion: () => void;
   toggleSound: () => void;
   toggleUnit: () => void;
+  updateProfile: (updates: { name?: string; title?: string; avatarId?: string }) => void;
   resetProgress: () => Promise<void>;
   checkDateRollover: () => void;
   completedQuestsCount: number;
@@ -292,6 +293,20 @@ export const HunterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setHunter((prev) => ({ ...prev, unit: prev.unit === 'kg' ? 'lb' : 'kg' }));
   }, []);
 
+  const updateProfile = useCallback((updates: { name?: string; title?: string; avatarId?: string }) => {
+    setHunter((prev) => {
+      const nextName = typeof updates.name === 'string' && updates.name.trim() ? updates.name.trim() : prev.name;
+      const nextTitle = typeof updates.title === 'string' && updates.title.trim() ? updates.title.trim() : prev.title;
+      const nextAvatar = typeof updates.avatarId === 'string' && updates.avatarId.trim() ? updates.avatarId.trim() : prev.avatarId;
+      return {
+        ...prev,
+        name: nextName,
+        title: nextTitle,
+        avatarId: nextAvatar,
+      };
+    });
+  }, []);
+
   const resetProgress = useCallback(async () => {
     await clearHunterState();
     setHunter(sanitizeHunterState(null));
@@ -320,6 +335,7 @@ export const HunterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         toggleReducedMotion,
         toggleSound,
         toggleUnit,
+        updateProfile,
         resetProgress,
         checkDateRollover,
         completedQuestsCount,

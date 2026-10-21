@@ -55,7 +55,7 @@ export interface HunterState {
   dailyQuests: DailyQuestItem[];
   training: TrainingPreview;
   nutrition: NutritionOverview;
-  activeScreen: 'dash' | 'quests' | 'lib' | 'status' | 'more' | 'nutrition' | 'analytics' | 'achievements';
+  activeScreen: 'dash' | 'quests' | 'lib' | 'status' | 'more' | 'nutrition' | 'analytics' | 'achievements' | 'profile' | 'bodyScan';
   currentOverlay: 'lvl' | 'rank' | 'notif' | null;
   reducedMotion: boolean;
   soundEnabled: boolean;
@@ -65,4 +65,7 @@ export interface HunterState {
   questCompletedDates: Record<string, string[]>; // { 'YYYY-MM-DD': ['q1', 'q2'] }
   questXpClaimedDates: Record<string, string[]>; // { 'YYYY-MM-DD': ['q1'] }
   completedActivityDates: string[]; // List of unique 'YYYY-MM-DD' dates with completed activity
+  // Hunter Profile & Customization
+  title?: string;
+  avatarId?: string;
 }

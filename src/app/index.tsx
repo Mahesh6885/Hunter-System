@@ -14,6 +14,8 @@ import { MoreScreen } from '../components/screens/MoreScreen';
 import { NutritionScreen } from '../components/screens/NutritionScreen';
 import { AnalyticsScreen } from '../components/screens/AnalyticsScreen';
 import { AchievementsScreen } from '../components/screens/AchievementsScreen';
+import { ProfileScreen } from '../components/screens/ProfileScreen';
+import { BodyScanScreen } from '../components/screens/BodyScanScreen';
 
 export default function MainApp() {
   const {
@@ -37,6 +39,7 @@ export default function MainApp() {
           <StatusScreen
             hunter={hunter}
             onAllocatePoint={allocateAttributePoint}
+            onOpenProfile={() => setActiveScreen('profile')}
           />
         );
       case 'more':
@@ -56,6 +59,7 @@ export default function MainApp() {
           <AnalyticsScreen
             onBack={() => setActiveScreen('more')}
             onOpenAchievements={() => setActiveScreen('achievements')}
+            onOpenBodyScan={() => setActiveScreen('bodyScan')}
           />
         );
       case 'achievements':
@@ -63,6 +67,21 @@ export default function MainApp() {
           <AchievementsScreen
             onBack={() => setActiveScreen('more')}
             onOpenAnalytics={() => setActiveScreen('analytics')}
+          />
+        );
+      case 'profile':
+        return (
+          <ProfileScreen
+            onBack={() => setActiveScreen('more')}
+            onOpenBodyScan={() => setActiveScreen('bodyScan')}
+            onOpenStatus={() => setActiveScreen('status')}
+            onOpenAchievements={() => setActiveScreen('achievements')}
+          />
+        );
+      case 'bodyScan':
+        return (
+          <BodyScanScreen
+            onBack={() => setActiveScreen('analytics')}
           />
         );
       default:

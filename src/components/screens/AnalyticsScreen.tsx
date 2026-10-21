@@ -10,15 +10,19 @@ import { COLORS, SPACING, FONTS } from '../../theme';
 import { SystemPanel } from '../common/SystemPanel';
 import { SystemBadge } from '../common/SystemBadge';
 import { ProgressBar } from '../common/ProgressBar';
+import { SystemButton } from '../common/SystemButton';
 import { useHunter } from '../../context/HunterContext';
 import { useWorkout } from '../../context/WorkoutContext';
 import { useNutrition } from '../../context/NutritionContext';
+import { useBodyScan } from '../../context/BodyScanContext';
 import { AnalyticsTimeRange } from '../../types/analytics';
 import { generateProgressAnalyticsSummary } from '../../utils/analyticsEngine';
+import { formatWeight, formatWeightDelta } from '../../utils/weightConversions';
 
 interface AnalyticsScreenProps {
   onBack: () => void;
   onOpenAchievements?: () => void;
+  onOpenBodyScan?: () => void;
 }
 
 const TIME_RANGES: { id: AnalyticsTimeRange; label: string }[] = [
@@ -30,10 +34,12 @@ const TIME_RANGES: { id: AnalyticsTimeRange; label: string }[] = [
 export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
   onBack,
   onOpenAchievements,
+  onOpenBodyScan,
 }) => {
   const { hunter } = useHunter();
   const { history: workoutHistory } = useWorkout();
   const { targets: nutritionTargets, dayRecords } = useNutrition();
+  const { summary: bodyScanSummary } = useBodyScan();
 
   const [activeRange, setActiveRange] = useState<AnalyticsTimeRange>('7d');
 
@@ -268,18 +274,84 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
         </View>
       </SystemPanel>
 
-      {/* 7. Future Feature: Bodyweight Scan Protocol */}
-      <SystemPanel title="BODY SCAN & WEIGHT TRACKING">
-        <View style={styles.futureBox}>
-          <View style={styles.futureBadgeRow}>
-            <SystemBadge label="LOCKED" color={COLORS.tx3} />
-            <Text style={styles.futureTag}>PROTOCOL IN DEVELOPMENT</Text>
+      {/* 7. Active Biometric Body Scan Telemetry */}
+      <SystemPanel
+        title="BODY SCAN & WEIGHT TELEMETRY"
+        headerRight={
+          onOpenBodyScan && (
+            <SystemButton
+              label="OPEN LOG"
+              variant="secondary"
+              onPress={onOpenBodyScan}
+              style={{ minWidth: 70, paddingVertical: 4 }}
+            />
+          )
+        }>
+        {bodyScanSummary.latestEntry ? (
+          <View style={styles.bodyScanBox}>
+            <View style={styles.bodyScanMainRow}>
+              <View>
+                <Text style={styles.bodyScanSub}>
+                  LATEST MEASUREMENT ({bodyScanSummary.latestEntry.dateKey})
+                </Text>
+                <Text style={styles.bodyScanBig}>
+                  {formatWeight(bodyScanSummary.latestEntry.weightKg, hunter.unit)}
+                </Text>
+              </View>
+
+              {bodyScanSummary.deltaKg !== null && (
+                <View style={styles.bodyScanDeltaGroup}>
+                  <Text style={styles.bodyScanSub}>CHANGE</Text>
+                  <Text
+                    style={[
+                      styles.bodyScanDeltaVal,
+                      bodyScanSummary.deltaKg > 0 ? styles.deltaUp : styles.deltaDown,
+                    ]}>
+                    {formatWeightDelta(bodyScanSummary.deltaKg, hunter.unit)}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            <View style={styles.bodyScanGrid}>
+              <View style={styles.bodyScanMiniCell}>
+                <Text style={styles.bodyScanMiniLabel}>PREVIOUS</Text>
+                <Text style={styles.bodyScanMiniVal}>
+                  {bodyScanSummary.previousEntry
+                    ? formatWeight(bodyScanSummary.previousEntry.weightKg, hunter.unit)
+                    : '--'}
+                </Text>
+              </View>
+              <View style={styles.bodyScanMiniCell}>
+                <Text style={styles.bodyScanMiniLabel}>AVERAGE</Text>
+                <Text style={styles.bodyScanMiniVal}>
+                  {formatWeight(bodyScanSummary.averageWeightKg, hunter.unit)}
+                </Text>
+              </View>
+              <View style={styles.bodyScanMiniCell}>
+                <Text style={styles.bodyScanMiniLabel}>TOTAL LOGS</Text>
+                <Text style={[styles.bodyScanMiniVal, { color: COLORS.c1 }]}>
+                  {bodyScanSummary.totalEntriesCount}
+                </Text>
+              </View>
+            </View>
           </View>
-          <Text style={styles.futureTitle}>BIOMETRIC WEIGHT & BODY FAT TELEMETRY</Text>
-          <Text style={styles.futureDesc}>
-            Body mass and composition tracking will be unlocked in a future System update. No manual weight records exist in current protocol.
-          </Text>
-        </View>
+        ) : (
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyTitle}>NO WEIGHT SCANS RECORDED</Text>
+            <Text style={styles.emptyDesc}>
+              Log your bodyweight to generate offline-first weight trajectory curves and change rates.
+            </Text>
+            {onOpenBodyScan && (
+              <SystemButton
+                label="+ LOG FIRST MEASUREMENT"
+                variant="secondary"
+                onPress={onOpenBodyScan}
+                style={{ marginTop: SPACING.s2 }}
+              />
+            )}
+          </View>
+        )}
       </SystemPanel>
     </ScrollView>
   );
@@ -559,5 +631,64 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.tx2,
     lineHeight: 17,
+  },
+  bodyScanBox: {
+    gap: SPACING.s2,
+  },
+  bodyScanMainRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  bodyScanSub: {
+    fontFamily: FONTS.displayMedium,
+    fontSize: 9,
+    color: COLORS.tx3,
+    letterSpacing: 1,
+  },
+  bodyScanBig: {
+    fontFamily: FONTS.displayBold,
+    fontSize: 22,
+    color: COLORS.c1,
+    marginTop: 2,
+  },
+  bodyScanDeltaGroup: {
+    alignItems: 'flex-end',
+  },
+  bodyScanDeltaVal: {
+    fontFamily: FONTS.displayBold,
+    fontSize: 18,
+    marginTop: 2,
+  },
+  deltaUp: {
+    color: COLORS.c1,
+  },
+  deltaDown: {
+    color: COLORS.ok,
+  },
+  bodyScanGrid: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(10, 20, 32, 0.7)',
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    borderRadius: 4,
+    padding: SPACING.s2,
+    justifyContent: 'space-between',
+  },
+  bodyScanMiniCell: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  bodyScanMiniLabel: {
+    fontFamily: FONTS.displayMedium,
+    fontSize: 8,
+    color: COLORS.tx3,
+    letterSpacing: 1,
+  },
+  bodyScanMiniVal: {
+    fontFamily: FONTS.displayBold,
+    fontSize: 14,
+    color: COLORS.tx,
+    marginTop: 2,
   },
 });

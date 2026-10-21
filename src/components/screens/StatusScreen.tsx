@@ -6,11 +6,13 @@ import { HunterAvatar } from '../common/HunterAvatar';
 import { RankBadge } from '../common/RankBadge';
 import { ProgressBar } from '../common/ProgressBar';
 import { SystemBadge } from '../common/SystemBadge';
+import { SystemButton } from '../common/SystemButton';
 import { HunterState, HunterAttributes } from '../../types/hunter';
 
 interface StatusScreenProps {
   hunter: HunterState;
   onAllocatePoint: (attr: keyof HunterAttributes) => void;
+  onOpenProfile?: () => void;
 }
 
 const ATTRIBUTES_CONFIG: Array<{ key: keyof HunterAttributes; label: string }> = [
@@ -26,15 +28,27 @@ const RANKS = ['E', 'D', 'C', 'B', 'A', 'S'];
 export const StatusScreen: React.FC<StatusScreenProps> = ({
   hunter,
   onAllocatePoint,
+  onOpenProfile,
 }) => {
   const xpPercent = (hunter.xp / hunter.maxXP) * 100;
 
   return (
     <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.content}>
       {/* Hunter Status Overview */}
-      <SystemPanel title="Hunter Status">
+      <SystemPanel
+        title="Hunter Status"
+        headerRight={
+          onOpenProfile && (
+            <SystemButton
+              label="PROFILE"
+              variant="secondary"
+              onPress={onOpenProfile}
+              style={{ minWidth: 65, paddingVertical: 4 }}
+            />
+          )
+        }>
         <View style={styles.profileRow}>
-          <HunterAvatar size={56} />
+          <HunterAvatar size={56} avatarId={hunter.avatarId || 'monarch'} />
           <View style={styles.nameGroup}>
             <Text style={styles.hunterName}>{hunter.name}</Text>
             <Text style={styles.hunterSub}>

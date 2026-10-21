@@ -142,6 +142,8 @@ export function sanitizeHunterState(raw: unknown, referenceDateKey?: string): Hu
     questCompletedDates,
     questXpClaimedDates,
     completedActivityDates,
+    title: typeof rawObj.title === 'string' && rawObj.title.trim() ? rawObj.title.trim() : INITIAL_HUNTER_STATE.title,
+    avatarId: typeof rawObj.avatarId === 'string' && rawObj.avatarId.trim() ? rawObj.avatarId.trim() : INITIAL_HUNTER_STATE.avatarId,
   };
 }
 
